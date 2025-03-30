@@ -12,14 +12,11 @@ import androidx.core.view.WindowInsetsCompat;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity {
-
-    ArrayList<Film> films = new ArrayList<Film>(List.of(new Film(1, "F1"),
-            new Film(2, "F2"),
-            new Film(3, "F3"),
-            new Film(4, "F4"),
-            new Film(5, "F5")));
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,8 +27,24 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        ListView filmList = findViewById(R.id.filmList);
-        FilmAdapter filmAdapter = new FilmAdapter(this, R.layout.film_list_item, films);
-        filmList.setAdapter(filmAdapter);
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        Call<List<Film>> call = apiService.getFilms();
+        call.enqueue(new Callback<List<Film>>() {
+            @Override
+            public void onResponse(Call<List<Film>> call, Response<List<Film>> response) {
+                if (response.isSuccessful()) {
+                    List<Film> films = response.body();
+                    // Обробляємо список постів
+                    ListView filmList = findViewById(R.id.filmList);
+                    FilmAdapter filmAdapter = new FilmAdapter(MainActivity.this, R.layout.film_list_item, films);
+                    filmList.setAdapter(filmAdapter);
+                }
+            }
+            @Override
+            public void onFailure(Call<List<Film>> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
     }
 }
+//npx json-server db.json
